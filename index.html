@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#10b981" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="SnapTab" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="format-detection" content="telephone=no" />
+<meta name="description" content="Free, private receipt-to-expense tracker. No account, no bank linking, no subscription. Photos and notes stay on your device. Clean monthly CSV export for tax season." />
+
+<title>SnapTab — Receipts &amp; Expenses</title>
+
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon.png" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+
+<body data-view="list">
+
+<!-- Skip link for keyboard / screen reader users -->
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<!-- Live region for announcements -->
+<div id="live-region" class="sr-only" role="status" aria-live="polite"></div>
+
+<!-- ============================== ONBOARDING ============================== -->
+<section id="onboarding" class="onboarding" hidden aria-labelledby="onb-title">
+  <div class="onb-card" role="dialog" aria-modal="true" aria-labelledby="onb-title">
+    <div class="onb-track">
+      <article class="onb-slide" data-slide="1">
+        <div class="onb-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="64" height="64" focusable="false">
+            <rect x="6" y="6" width="52" height="52" rx="14" fill="currentColor" />
+            <path d="M18 22 H46 M18 30 H42 M18 38 H38 M18 46 H44" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+          </svg>
+        </div>
+        <h2 id="onb-title">Your receipts stay on this device</h2>
+        <p>No account. No bank linking. No tracking. Photos and notes are saved in your browser, never uploaded.</p>
+      </article>
+      <article class="onb-slide" data-slide="2" hidden>
+        <div class="onb-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="64" height="64" focusable="false">
+            <circle cx="32" cy="32" r="28" fill="currentColor" />
+            <path d="M32 18v28 M18 32h28" stroke="#fff" stroke-width="5" stroke-linecap="round" />
+          </svg>
+        </div>
+        <h2>Tap the + button to snap a receipt</h2>
+        <p>Use your camera or pick from your photo library. You will enter the amount and a quick category — usually under 10 seconds.</p>
+      </article>
+      <article class="onb-slide" data-slide="3" hidden>
+        <div class="onb-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" width="64" height="64" focusable="false">
+            <rect x="8" y="10" width="48" height="44" rx="6" fill="currentColor" />
+            <path d="M16 22h32 M16 32h24 M16 42h28" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+          </svg>
+        </div>
+        <h2>Built-in categories for self-employed taxes</h2>
+        <p>Meals, Travel, Supplies, Vehicle, Equipment, Software, Marketing, Office, Phone/Internet, and Other. Add your own anytime.</p>
+      </article>
+    </div>
+    <div class="onb-dots" role="tablist" aria-label="Onboarding progress">
+      <span class="onb-dot is-active" data-dot="1" aria-hidden="true"></span>
+      <span class="onb-dot" data-dot="2" aria-hidden="true"></span>
+      <span class="onb-dot" data-dot="3" aria-hidden="true"></span>
+    </div>
+    <div class="onb-actions">
+      <button type="button" class="btn btn-ghost" id="onb-skip">Skip</button>
+      <button type="button" class="btn btn-primary" id="onb-next">Next</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== INSTALL BANNER ============================== -->
+<aside id="install-banner" class="install-banner" hidden aria-live="polite">
+  <div>
+    <strong>Install SnapTab</strong>
+    <span>Add to your home screen for offline access.</span>
+  </div>
+  <div class="install-actions">
+    <button type="button" class="btn btn-primary btn-sm" id="install-accept">Install</button>
+    <button type="button" class="btn btn-ghost btn-sm" id="install-dismiss" aria-label="Dismiss install banner">Not now</button>
+  </div>
+</aside>
+
+<!-- ============================== APP HEADER ============================== -->
+<header class="app-header" role="banner">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 32 32" width="28" height="28" focusable="false">
+        <rect x="2" y="2" width="28" height="28" rx="8" fill="currentColor" />
+        <path d="M9 10h14 M9 15h11 M9 20h13" stroke="#fff" stroke-width="2" stroke-linecap="round" />
+      </svg>
+    </span>
+    <h1>SnapTab</h1>
+  </div>
+  <nav class="app-nav" aria-label="Primary">
+    <button type="button" class="nav-btn is-active" data-view="list" aria-current="page">Receipts</button>
+    <button type="button" class="nav-btn" data-view="summary">Summary</button>
+    <button type="button" class="nav-btn" data-view="export">Export</button>
+    <button type="button" class="nav-btn" data-view="settings" aria-label="Settings">Settings</button>
+  </nav>
+</header>
+
+<!-- ============================== MAIN ============================== -->
+<main id="main" class="app-main" tabindex="-1">
+
+  <!-- ===== LIST VIEW ===== -->
+  <section id="view-list" class="view view-list" aria-labelledby="list-heading">
+    <div class="view-header">
+      <h2 id="list-heading">Your receipts</h2>
+      <div class="filter-bar" role="search">
+        <label class="sr-only" for="search-input">Search merchants and notes</label>
+        <input type="search" id="search-input" placeholder="Search merchant or notes" autocomplete="off" />
+        <label class="sr-only" for="filter-category">Category</label>
+        <select id="filter-category">
+          <option value="">All categories</option>
+        </select>
+        <label class="sr-only" for="filter-from">From date</label>
+        <input type="date" id="filter-from" aria-label="From date" />
+        <label class="sr-only" for="filter-to">To date</label>
+        <input type="date" id="filter-to" aria-label="To date" />
+        <button type="button" class="btn btn-ghost btn-sm" id="filter-clear">Clear</button>
+      </div>
+    </div>
+
+    <div id="list-loading" class="state-block" hidden>
+      <div class="spinner" aria-hidden="true"></div>
+      <p>Loading your receipts…</p>
+    </div>
+
+    <div id="list-error" class="state-block state-error" hidden role="alert">
+      <p>Could not load receipts.</p>
+      <button type="button" class="btn btn-primary" id="list-retry">Retry</button>
+    </div>
+
+    <div id="list-empty" class="state-block state-empty" hidden>
+      <div class="empty-art" aria-hidden="true">
+        <svg viewBox="0 0 96 96" width="96" height="96" focusable="false">
+          <rect x="20" y="14" width="56" height="68" rx="8" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2" />
+          <path d="M30 30h36 M30 42h28 M30 54h32 M30 66h22" stroke="var(--muted)" stroke-width="3" stroke-linecap="round" />
+        </svg>
+      </div>
+      <h3>No receipts yet</h3>
+      <p>Tap the <span aria-hidden="true">+</span> button to snap your first receipt.</p>
+      <button type="button" class="btn btn-primary" id="empty-cta">Capture a receipt</button>
+    </div>
+
+    <ul id="receipt-list" class="receipt-list" aria-live="polite"></ul>
+
+    <p id="list-result-count" class="result-count" aria-live="polite"></p>
+  </section>
+
+  <!-- ===== DETAIL VIEW ===== -->
+  <section id="view-detail" class="view view-detail" hidden aria-labelledby="detail-heading">
+    <div class="view-header">
+      <button type="button" class="btn btn-ghost back-btn" id="detail-back" aria-label="Back to receipt list">&larr; Back</button>
+      <h2 id="detail-heading">Receipt</h2>
+    </div>
+
+    <div class="detail-photo-wrap">
+      <img id="detail-photo" alt="" class="detail-photo" />
+      <p id="detail-photo-empty" class="no-photo" hidden>No photo attached.</p>
+    </div>
+
+    <form id="detail-form" class="rcpt-form" novalidate>
+      <input type="hidden" id="detail-id" />
+      <div class="form-row">
+        <label for="detail-amount">Amount</label>
+        <input type="text" inputmode="decimal" id="detail-amount" required aria-describedby="err-detail-amount" />
+        <span class="err" id="err-detail-amount" aria-live="polite"></span>
+      </div>
+      <div class="form-row">
+        <label for="detail-merchant">Merchant</label>
+        <input type="text" id="detail-merchant" list="merchant-list-detail" required aria-describedby="err-detail-merchant" />
+        <datalist id="merchant-list-detail"></datalist>
+        <span class="err" id="err-detail-merchant" aria-live="polite"></span>
+      </div>
+      <div class="form-row form-row-half">
+        <div>
+          <label for="detail-date">Date</label>
+          <input type="date" id="detail-date" required />
+        </div>
+        <div>
+          <label for="detail-category">Category</label>
+          <select id="detail-category"></select>
+        </div>
+      </div>
+      <div class="form-row form-row-half">
+        <div>
+          <label for="detail-payment">Payment</label>
+          <input type="text" id="detail-payment" list="payment-list" placeholder="Card, cash, etc." />
+          <datalist id="payment-list">
+            <option value="Visa"></option>
+            <option value="Mastercard"></option>
+            <option value="Cash"></option>
+            <option value="Debit"></option>
+            <option value="Bank transfer"></option>
+          </datalist>
+        </div>
+        <div>
+          <label for="detail-tag">Project / client</label>
+          <input type="text" id="detail-tag" list="tag-list" placeholder="Optional tag" />
+          <datalist id="tag-list"></datalist>
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="detail-notes">Notes</label>
+        <textarea id="detail-notes" rows="3"></textarea>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" id="detail-share">Share</button>
+        <button type="button" class="btn btn-danger" id="detail-delete">Delete</button>
+        <button type="submit" class="btn btn-primary" id="detail-save">Save changes</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===== CAPTURE / ENTRY VIEW ===== -->
+  <section id="view-capture" class="view view-capture" hidden aria-labelledby="capture-heading">
+    <div class="view-header">
+      <button type="button" class="btn btn-ghost back-btn" id="capture-back" aria-label="Cancel and go back">&larr; Cancel</button>
+      <h2 id="capture-heading">New receipt</h2>
+    </div>
+
+    <div class="capture-photo-row">
+      <div class="capture-thumb" id="capture-thumb-wrap">
+        <img id="capture-thumb" alt="" hidden />
+        <span id="capture-thumb-placeholder">No photo</span>
+      </div>
+      <div class="capture-actions">
+        <label class="btn btn-primary" for="capture-input">
+          Take photo
+          <input type="file" id="capture-input" accept="image/*" capture="environment" hidden />
+        </label>
+        <label class="btn btn-ghost" for="upload-input">
+          Choose file
+          <input type="file" id="upload-input" accept="image/*" hidden />
+        </label>
+        <button type="button" class="btn btn-ghost" id="capture-remove" hidden>Remove photo</button>
+      </div>
+    </div>
+
+    <form id="capture-form" class="rcpt-form" novalidate>
+      <div class="form-row">
+        <label for="capture-amount">Amount</label>
+        <input type="text" inputmode="decimal" id="capture-amount" placeholder="0.00" required aria-describedby="err-capture-amount" />
+        <span class="err" id="err-capture-amount" aria-live="polite"></span>
+      </div>
+      <div class="form-row">
+        <label for="capture-merchant">Merchant</label>
+        <input type="text" id="capture-merchant" list="merchant-list-capture" autocomplete="off" required aria-describedby="err-capture-merchant" />
+        <datalist id="merchant-list-capture"></datalist>
+        <span class="err" id="err-capture-merchant" aria-live="polite"></span>
+      </div>
+      <div class="form-row form-row-half">
+        <div>
+          <label for="capture-date">Date</label>
+          <input type="date" id="capture-date" required />
+        </div>
+        <div>
+          <label for="capture-category">Category</label>
+          <select id="capture-category"></select>
+        </div>
+      </div>
+      <div class="form-row form-row-half">
+        <div>
+          <label for="capture-payment">Payment</label>
+          <input type="text" id="capture-payment" list="payment-list" placeholder="Card, cash, etc." />
+        </div>
+        <div>
+          <label for="capture-tag">Project / client</label>
+          <input type="text" id="capture-tag" placeholder="Optional tag" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="capture-notes">Notes</label>
+        <textarea id="capture-notes" rows="2"></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-ghost" id="capture-repeat">Repeat last</button>
+        <button type="submit" class="btn btn-primary" id="capture-save">Save receipt</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===== MILEAGE ENTRY VIEW ===== -->
+  <section id="view-mileage" class="view view-mileage" hidden aria-labelledby="mileage-heading">
+    <div class="view-header">
+      <button type="button" class="btn btn-ghost back-btn" id="mileage-back" aria-label="Cancel mileage entry">&larr; Cancel</button>
+      <h2 id="mileage-heading">Log mileage</h2>
+    </div>
+    <form id="mileage-form" class="rcpt-form" novalidate>
+      <div class="form-row form-row-half">
+        <div>
+          <label for="mileage-date">Date</label>
+          <input type="date" id="mileage-date" required />
+        </div>
+        <div>
+          <label for="mileage-rate">IRS rate ($/mi)</label>
+          <input type="text" inputmode="decimal" id="mileage-rate" />
+        </div>
+      </div>
+      <div class="form-row form-row-half">
+        <div>
+          <label for="mileage-start">Start odometer</label>
+          <input type="text" inputmode="decimal" id="mileage-start" placeholder="optional" />
+        </div>
+        <div>
+          <label for="mileage-end">End odometer</label>
+          <input type="text" inputmode="decimal" id="mileage-end" placeholder="optional" />
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="mileage-miles">Total miles</label>
+        <input type="text" inputmode="decimal" id="mileage-miles" required aria-describedby="err-mileage-miles" />
+        <span class="err" id="err-mileage-miles" aria-live="polite"></span>
+      </div>
+      <div class="form-row">
+        <label for="mileage-tag">Project / client</label>
+        <input type="text" id="mileage-tag" placeholder="Optional tag" />
+      </div>
+      <div class="form-row">
+        <label for="mileage-notes">Notes</label>
+        <textarea id="mileage-notes" rows="2"></textarea>
+      </div>
+      <p class="hint" id="mileage-hint" aria-live="polite"></p>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save trip</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===== SUMMARY VIEW ===== -->
+  <section id="view-summary" class="view view-summary" hidden aria-labelledby="summary-heading">
+    <div class="view-header">
+      <h2 id="summary-heading">Monthly summary</h2>
+      <div class="filter-bar">
+        <label class="sr-only" for="summary-month">Month</label>
+        <input type="month" id="summary-month" />
+      </div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="card">
+        <p class="card-label">Total spent</p>
+        <p class="card-value" id="summary-total">$0.00</p>
+        <p class="card-sub" id="summary-meta">0 receipts</p>
+      </div>
+      <div class="card">
+        <p class="card-label">Top merchant</p>
+        <p class="card-value" id="summary-top">—</p>
+        <p class="card-sub" id="summary-top-sub"></p>
+      </div>
+    </div>
+
+    <div class="card chart-card">
+      <p class="card-label">By category</p>
+      <canvas id="summary-chart" width="600" height="320" aria-label="Spending by category bar chart"></canvas>
+      <ul id="summary-legend" class="legend"></ul>
+    </div>
+
+    <div id="summary-empty" class="state-block state-empty" hidden>
+      <p>No receipts in this month yet.</p>
+    </div>
+  </section>
+
+  <!-- ===== EXPORT VIEW ===== -->
+  <section id="view-export" class="view view-export" hidden aria-labelledby="export-heading">
+    <div class="view-header">
+      <h2 id="export-heading">Export</h2>
+    </div>
+    <div class="card">
+      <h3>Monthly CSV</h3>
+      <p class="muted">Pick a month and download a clean CSV. Drops straight into Excel, Google Sheets, or any accountant's workflow.</p>
+      <div class="filter-bar">
+        <label class="sr-only" for="export-month">Month</label>
+        <input type="month" id="export-month" />
+        <button type="button" class="btn btn-primary" id="export-csv-month">Download month CSV</button>
+        <button type="button" class="btn btn-ghost" id="export-csv-all">Download all CSV</button>
+        <button type="button" class="btn btn-ghost" id="export-csv-share">Share CSV</button>
+      </div>
+      <p id="export-status" class="hint" aria-live="polite"></p>
+    </div>
+
+    <div class="card">
+      <h3>Photos</h3>
+      <p class="muted">Download every photo as a single .zip archive. Filenames match the <code>PhotoFile</code> column in the CSV.</p>
+      <button type="button" class="btn btn-primary" id="export-zip">Download photo archive</button>
+      <p id="export-zip-status" class="hint" aria-live="polite"></p>
+    </div>
+
+    <div class="card">
+      <h3>Backup &amp; restore</h3>
+      <p class="muted">A JSON backup is a full snapshot of every receipt, photo (base64), tag, and setting. Use it to move between devices.</p>
+      <div class="form-actions form-actions-left">
+        <button type="button" class="btn btn-primary" id="backup-export">Save backup</button>
+        <label class="btn btn-ghost" for="backup-import">
+          Restore backup
+          <input type="file" id="backup-import" accept="application/json" hidden />
+        </label>
+      </div>
+      <p id="backup-status" class="hint" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <!-- ===== SETTINGS VIEW ===== -->
+  <section id="view-settings" class="view view-settings" hidden aria-labelledby="settings-heading">
+    <div class="view-header">
+      <h2 id="settings-heading">Settings</h2>
+    </div>
+
+    <div class="card">
+      <h3>Display</h3>
+      <div class="form-row form-row-half">
+        <div>
+          <label for="setting-theme">Theme</label>
+          <select id="setting-theme">
+            <option value="system">Match system</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+        <div>
+          <label class="checkbox">
+            <input type="checkbox" id="setting-large-text" />
+            <span>Large text</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Finance</h3>
+      <div class="form-row form-row-half">
+        <div>
+          <label for="setting-currency">Currency</label>
+          <select id="setting-currency">
+            <option value="USD">USD — US Dollar</option>
+            <option value="CAD">CAD — Canadian Dollar</option>
+            <option value="EUR">EUR — Euro</option>
+            <option value="GBP">GBP — British Pound</option>
+            <option value="AUD">AUD — Australian Dollar</option>
+            <option value="NZD">NZD — New Zealand Dollar</option>
+            <option value="JPY">JPY — Japanese Yen</option>
+            <option value="CHF">CHF — Swiss Franc</option>
+            <option value="MXN">MXN — Mexican Peso</option>
+            <option value="INR">INR — Indian Rupee</option>
+            <option value="BRL">BRL — Brazilian Real</option>
+          </select>
+        </div>
+        <div>
+          <label for="setting-tax-month">Tax year starts</label>
+          <select id="setting-tax-month">
+            <option value="1">January</option>
+            <option value="2">February</option><option value="3">March</option>
+            <option value="4">April</option><option value="5">May</option>
+            <option value="6">June</option><option value="7">July</option>
+            <option value="8">August</option><option value="9">September</option>
+            <option value="10">October</option><option value="11">November</option>
+            <option value="12">December</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label for="setting-mileage-rate">Default mileage rate</label>
+        <input type="text" inputmode="decimal" id="setting-mileage-rate" />
+        <span class="hint">IRS standard mileage rate. Check the current figure with your tax authority and update annually.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Categories</h3>
+      <ul id="category-editor" class="chip-list"></ul>
+      <form id="category-add-form" class="form-row form-row-inline">
+        <label class="sr-only" for="category-add">Add a category</label>
+        <input type="text" id="category-add" placeholder="Add a category" maxlength="32" />
+        <button type="submit" class="btn btn-primary btn-sm">Add</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h3>Notifications</h3>
+      <p class="muted">An optional reminder on the 1st of each month to review last month's expenses. Notifications stay on this device.</p>
+      <div class="form-actions form-actions-left">
+        <button type="button" class="btn btn-primary" id="notif-enable">Enable monthly reminder</button>
+        <span id="notif-status" class="hint"></span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Quick actions</h3>
+      <div class="form-actions form-actions-left">
+        <button type="button" class="btn btn-primary" id="go-mileage">Log mileage</button>
+        <button type="button" class="btn btn-ghost" id="reopen-onb">Re-run intro</button>
+      </div>
+    </div>
+
+    <div class="card danger-card">
+      <h3>Danger zone</h3>
+      <p class="muted">Wipes every receipt, photo, tag and preference from this device. Cannot be undone.</p>
+      <button type="button" class="btn btn-danger" id="wipe-data">Erase all data</button>
+    </div>
+
+    <div class="card muted-card">
+      <h3>About</h3>
+      <p>SnapTab v1.0.0 — a privacy-first receipt tracker. No account, no bank linking, no subscriptions.</p>
+      <p class="tax-disclaimer"><strong>Not tax advice.</strong> SnapTab helps you organize records and totals. Confirm category treatment, mileage rates, and deductions with a qualified CPA or tax professional.</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- Floating + button -->
+<button type="button" class="fab" id="fab" aria-label="Capture a new receipt">
+  <svg viewBox="0 0 24 24" width="28" height="28" focusable="false" aria-hidden="true">
+    <path d="M12 5v14 M5 12h14" stroke="#fff" stroke-width="3" stroke-linecap="round" />
+  </svg>
+</button>
+
+<!-- ============================== CONFIRM DIALOG ============================== -->
+<dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-title">
+  <form method="dialog" class="confirm-body">
+    <h3 id="confirm-title">Confirm</h3>
+    <p id="confirm-message">Are you sure?</p>
+    <div id="confirm-extra" hidden>
+      <label>Type <code>ERASE</code> to confirm:
+        <input type="text" id="confirm-extra-input" autocomplete="off" />
+      </label>
+    </div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-ghost" id="confirm-cancel">Cancel</button>
+      <button type="button" class="btn btn-danger" id="confirm-ok">Confirm</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Toast container -->
+<div id="toast-host" class="toast-host" aria-live="polite" aria-atomic="false"></div>
+
+<footer class="app-footer">
+  <p class="tax-disclaimer">Not tax advice. Always confirm deductions with a qualified CPA.</p>
+</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

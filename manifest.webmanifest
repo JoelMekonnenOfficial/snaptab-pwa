@@ -1,0 +1,59 @@
+{
+  "name": "SnapTab — Receipts & Expenses",
+  "short_name": "SnapTab",
+  "description": "Free, private receipt-to-expense tracker. No account, no bank linking, no subscription. Photos and notes stay on your device. Clean monthly CSV export for tax season.",
+  "id": "/",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#10b981",
+  "lang": "en-US",
+  "dir": "ltr",
+  "categories": ["finance", "business", "productivity"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "icons/icon-72.png", "sizes": "72x72", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-96.png", "sizes": "96x96", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "screenshots/screen-1-list.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "Receipt list" },
+    { "src": "screenshots/screen-2-capture.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "Capture a receipt" },
+    { "src": "screenshots/screen-3-detail.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "Receipt detail" },
+    { "src": "screenshots/screen-4-summary.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "Monthly summary" },
+    { "src": "screenshots/screen-5-export.png", "sizes": "1080x1920", "type": "image/png", "form_factor": "narrow", "label": "CSV export" }
+  ],
+  "shortcuts": [
+    {
+      "name": "New receipt",
+      "short_name": "Capture",
+      "description": "Snap a new receipt",
+      "url": "./index.html?action=capture",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Monthly summary",
+      "short_name": "Summary",
+      "description": "View this month's totals",
+      "url": "./index.html?view=summary",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Export CSV",
+      "short_name": "Export",
+      "description": "Download a CSV of your receipts",
+      "url": "./index.html?view=export",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}
