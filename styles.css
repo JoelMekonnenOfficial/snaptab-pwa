@@ -642,3 +642,6 @@ a { color: var(--accent-strong); }
   body { background: #fff; color: #000; }
   .receipt-item { break-inside: avoid; }
 }
+
+/* Fix: the hidden attribute must always win over display rules (lock screen, dialogs and empty states were showing when they should not). */
+[hidden] { display: none !important; }
