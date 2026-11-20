@@ -1302,10 +1302,86 @@ function setupInstallBanner() {
 }
 
 /* -------------------- Notifications -------------------- */
+// Inside the iPhone app the monthly reminder is handed to iOS as local notifications, so it
+// arrives even when the app is closed. Nothing leaves the device.
+function nativeReminders() {
+  try {
+    const h = window.webkit && window.webkit.messageHandlers;
+    return (h && h['local-reminders']) ? h : null;
+  } catch (_) { return null; }
+}
+
+function scheduleNativeMonthly() {
+  const h = nativeReminders();
+  if (!h) return;
+  const items = [];
+  if (state.prefs.notifReminder) {
+    const now = new Date();
+    for (let i = 1; i <= 12; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth() + i, 1, 9, 0, 0, 0);
+      items.push({
+        id: `monthly-${d.getFullYear()}-${d.getMonth() + 1}`,
+        title: 'SnapTab monthly review',
+        body: 'Time to review last month’s expenses and export your CSV.',
+        at: d.getTime(),
+      });
+    }
+  }
+  try {
+    h['local-reminders'].postMessage(JSON.stringify({ action: 'set', items }));
+  } catch (_) { /* best-effort */ }
+}
+
+function nativeRequestPermission() {
+  return new Promise((resolve) => {
+    const h = nativeReminders();
+    let done = false;
+    const finish = (v) => {
+      if (done) return;
+      done = true;
+      window.removeEventListener('push-permission-request', onResult);
+      resolve(v);
+    };
+    const onResult = (e) => finish(e && e.detail === 'granted' ? 'granted' : 'denied');
+    window.addEventListener('push-permission-request', onResult);
+    try { h['push-permission-request'].postMessage('request'); } catch (_) { finish('denied'); }
+    setTimeout(() => finish('denied'), 2 * 60 * 1000);
+  });
+}
+
 function setupNotifications() {
   const btn = document.getElementById('notif-enable');
   const status = document.getElementById('notif-status');
   updateNotifStatus();
+
+  if (nativeReminders()) {
+    btn.addEventListener('click', async () => {
+      if (state.prefs.notifReminder) {
+        state.prefs.notifReminder = false;
+        await setPref('notifReminder', false);
+        scheduleNativeMonthly();
+        toast('Monthly reminder turned off.');
+      } else {
+        const result = await nativeRequestPermission();
+        if (result === 'granted') {
+          state.prefs.notifReminder = true;
+          await setPref('notifReminder', true);
+          scheduleNativeMonthly();
+          toast('Reminders enabled.');
+        } else {
+          status.textContent = 'Notifications are off for SnapTab. Turn them on in iPhone Settings.';
+          return;
+        }
+      }
+      updateNotifStatus();
+    });
+    // Keep the next 12 months topped up every time the app is opened.
+    scheduleNativeMonthly();
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') scheduleNativeMonthly();
+    });
+    return;
+  }
 
   btn.addEventListener('click', async () => {
     if (!('Notification' in window)) {
@@ -1335,6 +1411,13 @@ function setupNotifications() {
 
 function updateNotifStatus() {
   const status = document.getElementById('notif-status');
+  if (nativeReminders()) {
+    const btn = document.getElementById('notif-enable');
+    const on = !!state.prefs.notifReminder;
+    if (btn) btn.textContent = on ? 'Turn off monthly reminder' : 'Enable monthly reminder';
+    status.textContent = on ? 'Reminders on (1st of each month, 9:00).' : '';
+    return;
+  }
   if (!('Notification' in window)) {
     status.textContent = 'Notifications not supported.';
     return;
